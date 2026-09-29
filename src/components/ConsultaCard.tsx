@@ -21,9 +21,12 @@ export default function ConsultaCard({
  });
  }
 
- function formatarData(data: Date): string {
- return data.toLocaleDateString("pt-BR");
- }
+ function formatarData(data: Date | string) {
+  const dataConvertida =
+    data instanceof Date ? data : new Date(data);
+
+  return dataConvertida.toLocaleDateString("pt-BR");
+}
 
  return (
  <View style={styles.card}>

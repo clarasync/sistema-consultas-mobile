@@ -1,52 +1,65 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Button } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { Consulta } from "../interfaces/consulta";
-import ConsultaCard from "../components/ConsultaCard";import { obterConsultas, salvarConsultas } from "../services/storage";
-import { styles } from "../styles/app.styles";
+import { useFocusEffect } from "@react-navigation/native";
 
-export default function Home() {
+import { Consulta } from "../interfaces/consulta";
+import { Usuario } from "../types/usuario";
+import { ConsultaCard } from "../components";
+import { styles } from "../styles/app.styles";
+import {
+  obterConsultas,
+  salvarConsultas,
+} from "../services/storage";
+import { consultasDoUsuario } from "../utils/consultasDoUsuario";
+
+type HomeProps = {
+  usuario: Usuario;
+  onSair: () => void;
+  navigation: { navigate: (screen: string) => void };
+};
+
+export default function Home({
+  usuario,
+  onSair,
+  navigation,
+}: HomeProps) {
   const [consultas, setConsultas] = useState<Consulta[]>([]);
-const navigation = useNavigation();
+
   useFocusEffect(
     useCallback(() => {
-      async function carregarConsultas() {
-        const dados = await obterConsultas();
-
-const consultasConvertidas = dados.map((consulta) => ({
-  ...consulta,
-  data: new Date(consulta.data),
-}));
-
-setConsultas(consultasConvertidas);
-      }
-
       carregarConsultas();
-    }, [])
+    }, [usuario])
   );
 
-  async function confirmarConsulta(id: number) {
-    const atualizadas = consultas.map((consulta) =>
-      consulta.id === id
-        ? { ...consulta, status: "confirmada" as const }
+  async function carregarConsultas() {
+    const todas = await obterConsultas();
+
+    setConsultas(
+      consultasDoUsuario(todas, usuario)
+    );
+  }
+
+  async function atualizarStatus(
+    consultaId: number,
+    status: "confirmada" | "cancelada"
+  ) {
+    const todas = await obterConsultas();
+
+    const atualizadas = todas.map((consulta) =>
+      consulta.id === consultaId
+        ? { ...consulta, status }
         : consulta
     );
 
-    setConsultas(atualizadas);
     await salvarConsultas(atualizadas);
-  }
 
-  async function cancelarConsulta(id: number) {
-    const atualizadas = consultas.map((consulta) =>
-      consulta.id === id
-        ? { ...consulta, status: "cancelada" as const }
-        : consulta
+    setConsultas(
+      consultasDoUsuario(atualizadas, usuario)
     );
-
-    setConsultas(atualizadas);
-    await salvarConsultas(atualizadas);
   }
+
+  const ehPaciente = usuario.papel === "paciente";
 
   return (
     <View style={styles.container}>
@@ -54,25 +67,81 @@ setConsultas(consultasConvertidas);
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-  <Text style={styles.titulo}>Sistema de Consultas</Text>
-  <Text style={styles.subtitulo}>Consultas Agendadas</Text>
+          <Text style={styles.titulo}>
+            Olá, {usuario.nome}
+          </Text>
 
-  <Text onPress={() => navigation.navigate("Admin" as never)}>
-    Ir para Admin
-  </Text>
-</View>
+          <Text style={styles.subtitulo}>
+            {ehPaciente
+              ? "Minhas consultas"
+              : "Agenda do consultório"}
+          </Text>
+
+          <Text style={styles.papel}>
+            {ehPaciente ? "Paciente" : "Médico"} ·{" "}
+            {consultas.length} consulta(s)
+          </Text>
+        </View>
+
+        <View style={styles.acoes}>
+          {ehPaciente ? (
+            <View style={styles.botaoAcao}>
+              <Button
+                title="Agendar consulta"
+                onPress={() =>
+                  navigation.navigate("Agendar")
+                }
+                color="#4CAF50"
+              />
+            </View>
+          ) : null}
+
+          <View style={styles.botaoAcao}>
+            <Button
+              title="Sair"
+              onPress={onSair}
+              color="#F44336"
+            />
+          </View>
+        </View>
 
         {consultas.length === 0 ? (
-          <Text style={styles.subtitulo}>
-            Nenhuma consulta agendada ainda
-          </Text>
+          <View style={styles.vazio}>
+            <Text style={styles.vazioTexto}>
+              {ehPaciente
+                ? "Nenhuma consulta agendada ainda"
+                : "Nenhuma consulta na sua agenda"}
+            </Text>
+
+            {ehPaciente ? (
+              <Button
+                title="Agendar agora"
+                onPress={() =>
+                  navigation.navigate("Agendar")
+                }
+              />
+            ) : null}
+          </View>
         ) : (
           consultas.map((consulta) => (
             <ConsultaCard
               key={consulta.id}
               consulta={consulta}
-              onConfirmar={() => confirmarConsulta(consulta.id)}
-              onCancelar={() => cancelarConsulta(consulta.id)}
+              onConfirmar={
+                ehPaciente
+                  ? undefined
+                  : () =>
+                      atualizarStatus(
+                        consulta.id,
+                        "confirmada"
+                      )
+              }
+              onCancelar={() =>
+                atualizarStatus(
+                  consulta.id,
+                  "cancelada"
+                )
+              }
             />
           ))
         )}

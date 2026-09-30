@@ -1,0 +1,238 @@
+{
+  "especialidades": [
+    {
+      "id": 1,
+      "nome": "Cardiologia",
+      "descricao": "Cuidados com o coração e sistema cardiovascular."
+    },
+    {
+      "id": 2,
+      "nome": "Dermatologia",
+      "descricao": "Cuidados com a pele, cabelos e unhas."
+    },
+    {
+      "id": 3,
+      "nome": "Endocrinologia",
+      "descricao": "Tratamento de doenças hormonais e metabólicas."
+    },
+    {
+      "id": 4,
+      "nome": "Gastroenterologia",
+      "descricao": "Cuidados com o sistema digestivo."
+    },
+    {
+      "id": 5,
+      "nome": "Ginecologia",
+      "descricao": "Saúde do sistema reprodutor feminino."
+    },
+    {
+      "id": 6,
+      "nome": "Neurologia",
+      "descricao": "Cuidados com o sistema nervoso."
+    },
+    {
+      "id": 7,
+      "nome": "Ortopedia",
+      "descricao": "Tratamento de ossos, músculos e articulações."
+    },
+    {
+      "id": 8,
+      "nome": "Pediatria",
+      "descricao": "Cuidados com crianças e adolescentes."
+    },
+    {
+      "id": 9,
+      "nome": "Psiquiatria",
+      "descricao": "Cuidados com a saúde mental."
+    },
+    {
+      "id": 10,
+      "nome": "Clínica Geral",
+      "descricao": "Atendimento médico geral."
+    }
+  ],
+  "medicos": [
+    {
+      "id": 1,
+      "nome": "Dr. Carlos Silva",
+      "crm": "123456",
+      "email": "carlos.silva@clinica.com",
+      "especialidadeId": 1,
+      "ativo": true
+    },
+    {
+      "id": 2,
+      "nome": "Dra. Ana Costa",
+      "crm": "234567",
+      "email": "ana.costa@clinica.com",
+      "especialidadeId": 2,
+      "ativo": true
+    },
+    {
+      "id": 3,
+      "nome": "Dr. Pedro Santos",
+      "crm": "345678",
+      "email": "pedro.santos@clinica.com",
+      "especialidadeId": 3,
+      "ativo": true
+    },
+    {
+      "id": 4,
+      "nome": "Dra. Julia Oliveira",
+      "crm": "456789",
+      "email": "julia.oliveira@clinica.com",
+      "especialidadeId": 4,
+      "ativo": true
+    },
+    {
+      "id": 5,
+      "nome": "Dra. Marina Souza",
+      "crm": "567890",
+      "email": "marina.souza@clinica.com",
+      "especialidadeId": 5,
+      "ativo": true
+    },
+    {
+      "id": 6,
+      "nome": "Dr. Rafael Lima",
+      "crm": "678901",
+      "email": "rafael.lima@clinica.com",
+      "especialidadeId": 6,
+      "ativo": true
+    },
+    {
+      "id": 7,
+      "nome": "Dr. Lucas Ferreira",
+      "crm": "789012",
+      "email": "lucas.ferreira@clinica.com",
+      "especialidadeId": 7,
+      "ativo": true
+    },
+    {
+      "id": 8,
+      "nome": "Dra. Beatriz Almeida",
+      "crm": "890123",
+      "email": "beatriz.almeida@clinica.com",
+      "especialidadeId": 8,
+      "ativo": true
+    },
+    {
+      "id": 9,
+      "nome": "Dr. Felipe Rodrigues",
+      "crm": "901234",
+      "email": "felipe.rodrigues@clinica.com",
+      "especialidadeId": 9,
+      "ativo": true
+    },
+    {
+      "id": 10,
+      "nome": "Dra. Camila Martins",
+      "crm": "012345",
+      "email": "camila.martins@clinica.com",
+      "especialidadeId": 10,
+      "ativo": true
+    }
+  ],
+  "usuarios": [
+    {
+      "id": 1,
+      "nome": "Maria Silva",
+      "login": "maria",
+      "email": "maria@email.com",
+      "senha": "123456",
+      "papel": "paciente",
+      "cpf": "12345678900",
+      "telefone": "11999999999"
+    },
+    {
+      "id": 2,
+      "nome": "Dr. Carlos Silva",
+      "login": "carlos",
+      "email": "carlos.silva@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 1
+    },
+    {
+      "id": 3,
+      "nome": "Dra. Ana Costa",
+      "login": "ana",
+      "email": "ana.costa@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 2
+    },
+    {
+      "id": 4,
+      "nome": "Dr. Pedro Santos",
+      "login": "pedro",
+      "email": "pedro.santos@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 3
+    },
+    {
+      "id": 5,
+      "nome": "Dra. Julia Oliveira",
+      "login": "julia",
+      "email": "julia.oliveira@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 4
+    },
+    {
+      "id": 6,
+      "nome": "Dra. Marina Souza",
+      "login": "marina",
+      "email": "marina.souza@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 5
+    },
+    {
+      "id": 7,
+      "nome": "Dr. Rafael Lima",
+      "login": "rafael",
+      "email": "rafael.lima@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 6
+    },
+    {
+      "id": 8,
+      "nome": "Dr. Lucas Ferreira",
+      "login": "lucas",
+      "email": "lucas.ferreira@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 7
+    },
+    {
+      "id": 9,
+      "nome": "Dra. Beatriz Almeida",
+      "login": "beatriz",
+      "email": "beatriz.almeida@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 8
+    },
+    {
+      "id": 10,
+      "nome": "Dr. Felipe Rodrigues",
+      "login": "felipe",
+      "email": "felipe.rodrigues@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 9
+    },
+    {
+      "id": 11,
+      "nome": "Dra. Camila Martins",
+      "login": "camila",
+      "email": "camila.martins@clinica.com",
+      "senha": "123456",
+      "papel": "medico",
+      "medicoId": 10
+    }
+  ]
+}

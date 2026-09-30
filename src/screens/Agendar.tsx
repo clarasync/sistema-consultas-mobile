@@ -1,23 +1,15 @@
-// Substitui o Admin que digitava especialidade e sempre pegava medicos[0].
-// Aqui a consulta nasce com especialidade escolhida + médico daquela lista.
+// Aula 24/09/2026
+// Formulário de agendamento com validação visível, datepicker e montagem tipada.
 
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Button,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Button, ScrollView, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { ListaSelecao } from "../components";
-import { Consulta } from "../interfaces/consulta";
+import { ListaSelecao, SeletorData } from "../components";
 import { Medico } from "../interfaces/medico";
 import { Especialidade } from "../types/especialidade";
 import { Usuario } from "../types/usuario";
-import { Paciente } from "../types/paciente";
-import { parsearDataBR } from "../utils/dataConsulta";
+import { montarConsulta } from "../utils/montarConsulta";
+import { validarDataAgenda } from "../utils/dataConsulta";
 import {
   obterConsultas,
   obterEspecialidades,
@@ -31,12 +23,20 @@ type AgendarProps = {
   navigation: { goBack: () => void };
 };
 
+type ErrosAgenda = {
+  especialidade?: string;
+  medico?: string;
+  data?: string;
+};
+
 export default function Agendar({ usuario, navigation }: AgendarProps) {
   const [especialidades, setEspecialidades] = useState<Especialidade[]>([]);
   const [medicos, setMedicos] = useState<Medico[]>([]);
   const [especialidadeId, setEspecialidadeId] = useState<number | null>(null);
   const [medicoId, setMedicoId] = useState<number | null>(null);
-  const [dataTexto, setDataTexto] = useState("");
+  const [data, setData] = useState<Date | null>(null);
+  const [erros, setErros] = useState<ErrosAgenda>({});
+  const [sucesso, setSucesso] = useState("");
 
   useEffect(() => {
     async function carregar() {
@@ -44,9 +44,11 @@ export default function Agendar({ usuario, navigation }: AgendarProps) {
         obterEspecialidades(),
         obterMedicos(),
       ]);
+
       setEspecialidades(listaEsp);
       setMedicos(listaMed);
     }
+
     carregar();
   }, []);
 
@@ -57,91 +59,131 @@ export default function Agendar({ usuario, navigation }: AgendarProps) {
   function escolherEspecialidade(id: number) {
     setEspecialidadeId(id);
     setMedicoId(null);
+    setErros((prev) => ({
+      ...prev,
+      especialidade: undefined,
+      medico: undefined,
+    }));
+    setSucesso("");
   }
 
-    async function agendar() {
-    try {
-      if (!especialidadeId) {
-        Alert.alert("Erro", "Escolha uma especialidade");
-        return;
-      }
+  function escolherMedico(id: number) {
+    setMedicoId(id);
+    setErros((prev) => ({
+      ...prev,
+      medico: undefined,
+    }));
+    setSucesso("");
+  }
 
-      const medico = medicosFiltrados.find(
-        (item) => item.id === medicoId
-      );
+  function escolherData(dia: Date) {
+    setData(dia);
+    setErros((prev) => ({
+      ...prev,
+      data: validarDataAgenda(dia) ?? undefined,
+    }));
+    setSucesso("");
+  }
 
-      if (!medico) {
-        Alert.alert(
-          "Erro",
-          "Escolha um médico desta especialidade"
-        );
-        return;
-      }
+  function validarFormulario(): { medico: Medico; data: Date } | null {
+    const proximos: ErrosAgenda = {};
 
-      const data = parsearDataBR(dataTexto);
+    const medico = medicosFiltrados.find(
+      (item) => item.id === medicoId
+    );
 
-      if (!data) {
-        Alert.alert(
-          "Erro",
-          "Use a data no formato DD/MM/AAAA"
-        );
-        return;
-      }
-
-      const paciente: Paciente = {
-        id: usuario.id,
-        nome: usuario.nome,
-        cpf: usuario.cpf ?? "não informado",
-        email: usuario.email,
-        telefone: usuario.telefone,
-      };
-
-      const novaConsulta: Consulta = {
-        id: Date.now(),
-        medico,
-        paciente,
-        data,
-        valor: 350,
-        status: "agendada",
-        observacoes: `Agendada pelo app (${medico.especialidade.nome})`,
-      };
-
-      const atuais = await obterConsultas();
-
-      await salvarConsultas([
-        ...atuais,
-        novaConsulta,
-      ]);
-
-      Alert.alert(
-        "Sucesso",
-        "Consulta agendada",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
-    } catch (erro) {
-      console.error("Erro ao agendar consulta:", erro);
-
-      Alert.alert(
-        "Erro",
-        "Não foi possível salvar a consulta."
-      );
+    if (!especialidadeId) {
+      proximos.especialidade =
+        "Escolha uma especialidade da lista.";
     }
+
+    if (!medico) {
+      proximos.medico =
+        "Escolha um médico desta especialidade.";
+    }
+
+    if (!data) {
+      proximos.data =
+        "Escolha uma data no calendário.";
+    } else {
+      const erroData = validarDataAgenda(data);
+
+      if (erroData) {
+        proximos.data = erroData;
+      }
+    }
+
+    setErros(proximos);
+
+    if (
+      proximos.especialidade ||
+      proximos.medico ||
+      proximos.data ||
+      !medico ||
+      !data
+    ) {
+      return null;
+    }
+
+    return { medico, data };
+  }
+
+  async function agendar() {
+    const valido = validarFormulario();
+
+    if (!valido) {
+      return;
+    }
+
+    const novaConsulta = montarConsulta({
+      medico: valido.medico,
+      usuario,
+      data: valido.data,
+    });
+
+    const atuais = await obterConsultas();
+
+    await salvarConsultas([
+      ...atuais,
+      novaConsulta,
+    ]);
+
+    setSucesso(
+      "Consulta agendada. Voltando para a Home..."
+    );
+
+    setTimeout(() => {
+      navigation.goBack();
+    }, 900);
   }
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
+
       <ScrollView contentContainerStyle={styles.conteudo}>
-        <View style={styles.secao}>
-          <Text style={styles.titulo}>1. Escolha a especialidade</Text>
-          <Text style={styles.texto}>
-            A lista vem de src/data/data.ts. Não há campo para inventar um nome.
+        {sucesso ? (
+          <View style={styles.secaoSucesso}>
+            <Text style={styles.textoSucesso}>
+              {sucesso}
+            </Text>
+          </View>
+        ) : null}
+
+        <View
+          style={[
+            styles.secao,
+            erros.especialidade && styles.secaoErro,
+          ]}
+        >
+          <Text style={styles.titulo}>
+            1. Especialidade
           </Text>
+
+          <Text style={styles.texto}>
+            Campo obrigatório. A lista vem de src/data/banco.json.
+          </Text>
+
           <ListaSelecao
             itens={especialidades.map((item) => ({
               id: item.id,
@@ -151,37 +193,82 @@ export default function Agendar({ usuario, navigation }: AgendarProps) {
             selecionadoId={especialidadeId}
             onSelecionar={escolherEspecialidade}
           />
+
+          {erros.especialidade ? (
+            <Text style={styles.textoErro}>
+              {erros.especialidade}
+            </Text>
+          ) : null}
         </View>
 
-        <View style={styles.secao}>
-          <Text style={styles.titulo}>2. Escolha o médico</Text>
+        <View
+          style={[
+            styles.secao,
+            erros.medico && styles.secaoErro,
+          ]}
+        >
+          <Text style={styles.titulo}>
+            2. Médico
+          </Text>
+
           {!especialidadeId ? (
-            <Text style={styles.texto}>Primeiro escolha a especialidade.</Text>
+            <Text style={styles.texto}>
+              Primeiro escolha a especialidade.
+            </Text>
           ) : medicosFiltrados.length === 0 ? (
-            <Text style={styles.texto}>Nenhum médico ativo nesta especialidade.</Text>
+            <Text style={styles.texto}>
+              Nenhum médico ativo nesta especialidade.
+            </Text>
           ) : (
             <ListaSelecao
               itens={medicosFiltrados.map((item) => ({
                 id: item.id,
                 titulo: item.nome,
-                subtitulo: `CRM ${item.crm}`,
+                subtitulo: `${item.especialidade.nome} · ${item.email} · CRM ${item.crm}`,
               }))}
               selecionadoId={medicoId}
-              onSelecionar={setMedicoId}
+              onSelecionar={escolherMedico}
             />
           )}
+
+          {erros.medico ? (
+            <Text style={styles.textoErro}>
+              {erros.medico}
+            </Text>
+          ) : null}
         </View>
 
-        <View style={styles.secao}>
-          <Text style={styles.titulo}>3. Data da consulta</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="DD/MM/AAAA"
-            value={dataTexto}
-            onChangeText={setDataTexto}
+        <View
+          style={[
+            styles.secao,
+            erros.data && styles.secaoErro,
+          ]}
+        >
+          <Text style={styles.titulo}>
+            3. Data da consulta
+          </Text>
+
+          <Text style={styles.texto}>
+            Não agenda hoje nem o passado. O último dia habilitado é daqui a 2 meses.
+          </Text>
+
+          <SeletorData
+            selecionada={data}
+            onSelecionar={escolherData}
           />
-          <Button title="Agendar consulta" onPress={agendar} color="#79059C" />
+
+          {erros.data ? (
+            <Text style={styles.textoErro}>
+              {erros.data}
+            </Text>
+          ) : null}
         </View>
+
+        <Button
+          title="Agendar consulta"
+          onPress={agendar}
+          color="#79059C"
+        />
       </ScrollView>
     </View>
   );

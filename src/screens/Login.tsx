@@ -1,8 +1,8 @@
-// Tela nova. Email + senha. Quem entra é a sessão; o catálogo já veio do seed.
+// Aula 24/09/2026
+// Entrada por email ou nome de usuário. Feedback visível no próprio campo.
 
 import React, { useState } from "react";
 import {
-  Alert,
   Button,
   ScrollView,
   Text,
@@ -12,6 +12,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Usuario } from "../types/usuario";
 import { obterUsuarios } from "../services/storage";
+import { encontrarUsuario } from "../utils/encontrarUsuario";
 import { styles } from "../styles/auth.styles";
 
 type LoginProps = {
@@ -20,24 +21,35 @@ type LoginProps = {
 };
 
 export default function Login({ onEntrou, onIrCadastro }: LoginProps) {
-  const [email, setEmail] = useState("");
+  const [identificador, setIdentificador] = useState("");
   const [senha, setSenha] = useState("");
+  const [erroIdentificador, setErroIdentificador] = useState("");
+  const [erroSenha, setErroSenha] = useState("");
+  const [erroGeral, setErroGeral] = useState("");
 
   async function entrar() {
-    const emailLimpo = email.trim().toLowerCase();
+    const termo = identificador.trim();
+    setErroIdentificador("");
+    setErroSenha("");
+    setErroGeral("");
 
-    if (!emailLimpo || !senha) {
-      Alert.alert("Erro", "Preencha email e senha");
+    if (!termo) {
+      setErroIdentificador("Informe o email ou o nome de usuário.");
+    }
+
+    if (!senha) {
+      setErroSenha("Informe a senha.");
+    }
+
+    if (!termo || !senha) {
       return;
     }
 
     const usuarios = await obterUsuarios();
-    const encontrado = usuarios.find(
-      (usuario) => usuario.email === emailLimpo && usuario.senha === senha
-    );
+    const encontrado = encontrarUsuario(usuarios, termo, senha);
 
     if (!encontrado) {
-      Alert.alert("Erro", "Email ou senha inválidos");
+      setErroGeral("Email, usuário ou senha inválidos.");
       return;
     }
 
@@ -50,32 +62,52 @@ export default function Login({ onEntrou, onIrCadastro }: LoginProps) {
       <ScrollView contentContainerStyle={styles.conteudo}>
         <View style={styles.cartao}>
           <Text style={styles.titulo}>Entrar</Text>
+
           <Text style={styles.texto}>
             Paciente agenda e acompanha. Médico confirma ou cancela a agenda.
           </Text>
+
           <Text style={styles.dica}>
             Contas de laboratório{"\n"}
-            Paciente: maria@email.com / 1234{"\n"}
-            Médico: ana@clinica.com / 1234
+            Paciente: maria / 1234{"\n"}
+            Médico: ana / 1234
           </Text>
+
+          <Text style={styles.rotulo}>Email ou usuário</Text>
           <TextInput
-            style={styles.input}
-            placeholder="Email"
+            style={[
+              styles.input,
+              erroIdentificador && styles.inputErro,
+            ]}
+            placeholder="Email ou nome de usuário"
             autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
+            value={identificador}
+            onChangeText={setIdentificador}
           />
+          {erroIdentificador ? (
+            <Text style={styles.textoErro}>{erroIdentificador}</Text>
+          ) : null}
+
+          <Text style={styles.rotulo}>Senha</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, erroSenha && styles.inputErro]}
             placeholder="Senha"
             secureTextEntry
             value={senha}
             onChangeText={setSenha}
           />
+          {erroSenha ? (
+            <Text style={styles.textoErro}>{erroSenha}</Text>
+          ) : null}
+
+          {erroGeral ? (
+            <Text style={styles.textoErro}>{erroGeral}</Text>
+          ) : null}
+
           <View style={styles.botao}>
             <Button title="Entrar" onPress={entrar} color="#79059C" />
           </View>
+
           <Text style={styles.link} onPress={onIrCadastro}>
             Não tem conta? Cadastrar
           </Text>

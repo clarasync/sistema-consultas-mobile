@@ -90,6 +90,7 @@ export default function Admin({
       id: medicos.length + 1,
       nome: nomeMed,
       crm: crmMed,
+      email: `${nomeMed.toLowerCase().replace(/\s+/g, ".")}@clinica.com`,
       especialidade: especialidades[0],
       ativo: true,
     };

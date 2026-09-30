@@ -32,6 +32,7 @@ type CadastroProps = {
 
 export default function Cadastro({ onEntrou, onIrLogin }: CadastroProps) {
   const [nome, setNome] = useState("");
+  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [papel, setPapel] = useState<Papel>("paciente");
@@ -51,6 +52,7 @@ export default function Cadastro({ onEntrou, onIrLogin }: CadastroProps) {
 
   async function cadastrar() {
     const nomeLimpo = nome.trim();
+    const loginLimpo = login.trim().toLowerCase();
     const emailLimpo = email.trim().toLowerCase();
 
     if (!nomeLimpo || !emailLimpo || !senha) {
@@ -84,6 +86,7 @@ export default function Cadastro({ onEntrou, onIrLogin }: CadastroProps) {
         id: Date.now(),
         nome: nomeLimpo,
         crm: crm.trim(),
+        email: emailLimpo,
         especialidade,
         ativo: true,
       };
@@ -95,6 +98,7 @@ export default function Cadastro({ onEntrou, onIrLogin }: CadastroProps) {
       id: Date.now(),
       nome: nomeLimpo,
       email: emailLimpo,
+      login: loginLimpo,
       senha,
       papel,
       medicoId,

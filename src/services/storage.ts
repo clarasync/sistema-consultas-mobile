@@ -1,6 +1,6 @@
-// Aula 24/09/2026
-// Persistência local. O catálogo inicial vem de banco.json via data.ts.
-// Novos cadastros e consultas ficam no AsyncStorage deste aparelho.
+// Aula 02/10/2026
+// Persistência local. Catálogo em banco.json. Runtime no AsyncStorage.
+// A senha do admin, se alterada, permanece no merge da versão 4.
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ESPECIALIDADES, MEDICOS, USUARIOS_DEMO } from "../data/data";
@@ -18,11 +18,9 @@ const KEYS = {
   SESSAO: "@consultas:sessao",
 };
 
-const VERSAO_CATALOGO = "3";
+const VERSAO_CATALOGO = "4";
 
-export async function salvarEspecialidades(
-  especialidades: Especialidade[]
-) {
+export async function salvarEspecialidades(especialidades: Especialidade[]) {
   try {
     await AsyncStorage.setItem(
       KEYS.ESPECIALIDADES,
@@ -72,16 +70,13 @@ export async function salvarConsultas(consultas: Consulta[]) {
 export async function obterConsultas(): Promise<Consulta[]> {
   try {
     const dados = await AsyncStorage.getItem(KEYS.CONSULTAS);
-
     if (dados) {
       const consultas = JSON.parse(dados);
-
       return consultas.map((consulta: Consulta) => ({
         ...consulta,
         data: new Date(consulta.data),
       }));
     }
-
     return [];
   } catch (erro) {
     console.error("Erro ao obter consultas:", erro);
@@ -141,37 +136,37 @@ function completarLogin(usuario: Usuario): Usuario {
 }
 
 function mesclarMedicos(atuais: Medico[]): Medico[] {
-  const extras = atuais.filter(
-    (medico) => !MEDICOS.some((item) => item.id === medico.id)
-  );
-
+  const extras = atuais.filter((medico) => !MEDICOS.some((item) => item.id === medico.id));
   const catalogo = MEDICOS.map((mock) => {
     const jaSalvo = atuais.find((item) => item.id === mock.id);
-
     return {
       ...mock,
       email: jaSalvo?.email || mock.email,
     };
   });
-
-  return [
-    ...catalogo,
-    ...extras.map((medico) => ({
-      ...medico,
-      email: medico.email || "",
-    })),
-  ];
+  return [...catalogo, ...extras.map((medico) => ({
+    ...medico,
+    email: medico.email || "",
+  }))];
 }
 
 function mesclarUsuarios(atuais: Usuario[]): Usuario[] {
   const atuaisComLogin = atuais.map(completarLogin);
-
   const extras = atuaisComLogin.filter(
-    (usuario) =>
-      !USUARIOS_DEMO.some((demo) => demo.email === usuario.email)
+    (usuario) => !USUARIOS_DEMO.some((demo) => demo.email === usuario.email)
   );
-
-  return [...USUARIOS_DEMO, ...extras];
+  const catalogo = USUARIOS_DEMO.map((demo) => {
+    const jaSalvo = atuaisComLogin.find((item) => item.email === demo.email);
+    if (demo.papel === "admin" && jaSalvo) {
+      return {
+        ...demo,
+        senha: jaSalvo.senha,
+        nome: jaSalvo.nome || demo.nome,
+      };
+    }
+    return demo;
+  });
+  return [...catalogo, ...extras];
 }
 
 export async function semearDadosIniciais() {
@@ -181,34 +176,22 @@ export async function semearDadosIniciais() {
     const usuariosAtuais = await obterUsuarios();
 
     await salvarEspecialidades(ESPECIALIDADES);
-
     await salvarMedicos(mesclarMedicos(medicosAtuais));
-
     await salvarUsuarios(
-      usuariosAtuais.length === 0
-        ? USUARIOS_DEMO
-        : mesclarUsuarios(usuariosAtuais)
+      usuariosAtuais.length === 0 ? USUARIOS_DEMO : mesclarUsuarios(usuariosAtuais)
     );
-
     await AsyncStorage.setItem(KEYS.VERSAO, VERSAO_CATALOGO);
 
     const sessao = await obterSessao();
-
     if (sessao) {
-      await salvarSessao(
-        completarLogin({
-          ...sessao,
-          email:
-            sessao.email === "maria@clinica.com"
-              ? "maria@email.com"
-              : sessao.email,
-        })
-      );
+      await salvarSessao(completarLogin({
+        ...sessao,
+        email: sessao.email === "maria@clinica.com" ? "maria@email.com" : sessao.email,
+      }));
     }
 
     if (versao !== VERSAO_CATALOGO) {
       const consultas = await obterConsultas();
-
       if (consultas.length > 0) {
         await salvarConsultas(
           consultas.map((consulta) => ({

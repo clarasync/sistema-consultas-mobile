@@ -47,4 +47,12 @@ export const USUARIOS_DEMO: Usuario[] = [
     papel: "medico",
     medicoId: 1,
   },
+    {
+    id: 12,
+    nome: "Administrador",
+    login: "admin",
+    email: "admin@clinica.com",
+    senha: "admin",
+    papel: "admin",
+  },
 ];
